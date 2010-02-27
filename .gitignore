@@ -1,3 +1,5 @@
 # Python distutils
 build
 dist
+MANIFEST
+*.egg-info

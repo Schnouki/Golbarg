@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
+from setuptools import setup
 import os.path
 
 setup(name='Golbarg',
@@ -11,8 +11,8 @@ setup(name='Golbarg',
       author_email='thomas.jost@gmail.com',
       url='http://github.com/Schnouki/Golbarg',
       requires=['Jinja2', 'Markdown', 'PyYAML'],
+      platforms='any',
       scripts=['golbarg'],
-      data_files=[(os.path.join('share', 'golbarg'), ['Makefile.example', 'config.yaml.example'])],
       classifiers = [
           'Development Status :: 4 - Beta',
           'Environment :: Console',
