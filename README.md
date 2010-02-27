@@ -30,7 +30,7 @@ Installation
 1. Install Python (version 2.6, Golbarg is *not* compatible with Python 3 yet)
 2. Install the dependencies
 3. Install Golbarg:
-    * Using Python tools: `easy_install Golbarg` or `pip Golbarg`
+    * Using Python tools: `easy_install Golbarg` or `pip install Golbarg`
     * Using tools from your distribution (`pacman`, `aptitude`, `emerge`...) if someone packaged Golbarg for it
 4. Create a directory where you will put all your files
 5. Create your configuration file and templates; you may want to look at [mine](http://github.com/Schnouki/schnouki.net) for examples
