@@ -1,0 +1,7 @@
+title: My Blog
+author: John Doe
+url: http://my-blog.com
+default_post_template: post.html
+archive_month_template: archive_month.html
+archive_year_template: archive_year.html
+tag_template: tag.html

@@ -1,0 +1,304 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+
+CONTENT_DIR   = "content"
+POSTS_DIR     = "content/posts"
+TEMPLATES_DIR = "templates"
+STATIC_DIR    = "static"
+SITE_DIR      = "site"
+
+POST_HEADER_SEP_RE = "^--+$"
+
+import datetime
+import os
+import os.path
+import re
+import shutil
+import sys
+import time
+
+import jinja2
+import markdown
+import yaml
+
+# Compile regexps
+POST_HEADER_SEP_RE = re.compile(POST_HEADER_SEP_RE, re.M)
+
+class Golbarg:
+    def __init__(self, jinja_filters=None):
+        # Load configuration from the config.yaml file
+        with open("config.yaml") as cf:
+            self.site_config = yaml.load(cf.read())
+
+        self.posts = list()
+        
+        self.env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATES_DIR))
+        self.env.globals['site'] = self.site_config
+        self.env.globals['posts'] = self.posts
+
+        if jinja_filters is not None:
+            for filter_name in jinja_filters.iterkeys():
+                self.env.filters[filter_name] = jinja_filters[filter_name]
+
+        # Months
+        months = {}
+        for m in range(1, 13):
+            months[m] = datetime.date(2010, m, 1).strftime("%B")
+        self.env.globals['months'] = months
+
+    def run(self):
+        # First, parse files in the content/posts dir
+        self.parse_posts()
+        self.update_metadata()
+
+        # Then prepare the destination directory
+        if not os.path.isdir(SITE_DIR):
+            os.makedirs(SITE_DIR)
+        
+        # Then generate site root
+        self.make_site_root()
+
+        # ...and actual posts
+        self.make_posts()
+
+        # ...and archive
+        self.make_archive()
+
+        # ...and tags
+        self.make_tags()
+
+        # ...and symlink static files
+        print "Symlinking static files..."
+        if not os.path.islink(os.path.join(SITE_DIR, STATIC_DIR)):
+            os.symlink(os.path.abspath(STATIC_DIR), os.path.join(SITE_DIR, STATIC_DIR))
+
+        print "All done! =]"
+
+    def parse_posts(self):
+        """Parse all the files in the posts directory, extracting metadata and generating HTML files"""
+        print "Parsing posts..."
+        
+        post_files = filter(os.path.isfile, [os.path.join(POSTS_DIR, post) for post in os.listdir(POSTS_DIR)])
+        post_files.sort()
+
+        for post_path in post_files:
+            p = Post(post_path)
+            self.posts.append(p)
+        print "Parsed %d posts" % len(post_files)
+
+    def update_metadata(self):
+        """Add some useful informations to the metadata available, both for site and posts"""
+        # Sort posts by date
+        self.posts.sort(key=Post.timestamp)
+
+        # Site last update date
+        self.site_config['update_date'] = self.posts[-1].date
+
+        # Copyright period
+        self.site_config['copyright_period'] = "%04d - %04d" % (self.posts[0].date.year, self.posts[-1].date.year)
+
+        # Post absolute URL
+        for post in self.posts:
+            post.absolute_url = self.site_config['url'] + post.relative_url
+
+        # Tags
+        self.tags = {}
+        self.tag_min = sys.maxint
+        self.tag_max = 0
+        for post in self.posts:
+            for tag in post.tags:
+                if not tag in self.tags:
+                    self.tags[tag] = 0
+                self.tags[tag] += 1
+        for tag in self.tags:
+            n = self.tags[tag]
+            if self.tag_min > n:
+                self.tag_min = n
+            if n > self.tag_max:
+                self.tag_max = n
+        self.env.globals['tags'] = self.tags
+        self.env.globals['tag_min'] = self.tag_min
+        self.env.globals['tag_max'] = self.tag_max
+
+        # Archive
+        self.archive = {}
+        self.month_names = {}
+        for post in self.posts:
+            y, m = post.date.year, post.date.month
+            if m not in self.month_names:
+                self.month_names[m] = post.date.strftime("%B")
+            if not y in self.archive:
+                self.archive[y] = {}
+            if not m in self.archive[y]:
+                self.archive[y][m] = 0
+            self.archive[y][m] += 1
+        self.env.globals['archive'] = self.archive
+        self.env.globals['month_names'] = self.month_names
+
+        print "Latest update: " + str(self.site_config['update_date'])
+
+    def make_site_root(self):
+        """Generate all the files in the root content directory (index, feed...)"""
+
+        print "Generating files at site root..."
+        
+        files = [f for f in os.listdir(CONTENT_DIR) if os.path.isfile(os.path.join(CONTENT_DIR, f))]
+        files.sort()
+
+        for fn in files:
+            # Load file as a template
+            with open(os.path.join(CONTENT_DIR, fn)) as f:
+                content = f.read()
+            tpl = self.env.from_string(content)
+
+            # Prepare template context
+            ctx = {'absolute_url': self.site_config['url'] + fn}
+
+            # Render template to file
+            tpl.stream(ctx).dump(os.path.join(SITE_DIR, fn))
+            print "  " + fn
+
+    def make_posts(self):
+        """Generate all posts"""
+        
+        print "Generating posts..."
+
+        for post in self.posts:
+            # Template to load?
+            if post.has_config("template"):
+                tpl_name = post.template
+            else:
+                tpl_name = self.site_config['default_post_template']
+            tpl = self.env.get_template(tpl_name)
+
+            # Prepare template context
+            ctx = {'post': post}
+
+            # Render template to file
+            post_dir = os.path.split(post.file_path)[0]
+            if not os.path.isdir(post_dir):
+                os.makedirs(post_dir)
+            tpl.stream(ctx).dump(post.file_path)
+            print "  %s - %s (%s)" % (post.date.strftime("%Y-%m-%d"), post.title, post.source_path)
+    
+    def make_archive(self):
+        """Generate archive"""
+
+        print "Generating archive..."
+
+        year_tpl = self.env.get_template(self.site_config['archive_year_template'])
+        month_tpl = self.env.get_template(self.site_config['archive_month_template'])
+
+        # Context
+        ctx = {}
+        
+        for year in self.archive.iterkeys():
+            year_dir = os.path.join(SITE_DIR, "archive", "%04d" % year)
+            if not os.path.isdir(year_dir):
+                os.makedirs(year_dir)
+            
+            ctx['year'] = year
+            year_tpl.stream(ctx).dump(os.path.join(year_dir, "index.html"))
+            print "  %04d" % year
+
+            for month in self.archive[year].iterkeys():
+                month_dir = os.path.join(year_dir, "%02d" % month)
+                if not os.path.isdir(month_dir):
+                    os.makedirs(month_dir)
+
+                ctx['month'] = month
+                month_tpl.stream(ctx).dump(os.path.join(month_dir, "index.html"))
+                print "    %04d/%02d" % (year, month)
+
+
+    def make_tags(self):
+        """Generate tag pages"""
+
+        print "Generating tag pages..."
+
+        # Template and context
+        tpl = self.env.get_template(self.site_config['tag_template'])
+        ctx = {}
+
+        for tag in self.tags:
+            tag_dir = os.path.join(SITE_DIR, "tag", tag)
+            if not os.path.isdir(tag_dir):
+                os.makedirs(tag_dir)
+
+            ctx['tag'] = tag
+            tpl.stream(ctx).dump(os.path.join(tag_dir, "index.html"))
+            print "  %s" % tag
+
+
+class Post:
+    def __init__(self, path):
+        self.source_path = path
+        
+        with open(self.source_path) as post_file:
+            post_data = post_file.read()
+
+        # Separate header (yaml) and content (markdown)
+        (post_header, post_content,) = re.split(POST_HEADER_SEP_RE, post_data, 1)
+
+        # Parse header and content
+        # TODO: use post header to add markdown filters
+        self.config = yaml.load(post_header)
+        self.content = markdown.markdown(post_content)
+
+        # Add some attributes
+        self.relative_url = "/%04d/%02d/%02d/%s" % (self.date.year, self.date.month, self.date.day, self.url)
+        self.file_path = os.path.join(SITE_DIR, "%04d" % self.date.year, "%02d" % self.date.month, "%02d" % self.date.day, self.url, "index.html")
+
+    def __getattr__(self, name):
+        try:
+            # Is it something like "a.b"?
+            s = name.split(".", 1)
+            if len(s) <= 1:
+                return self.config[name]
+            else:
+                return getattr(self.config[s[0]], s[1])
+        except KeyError:
+            print name
+            raise AttributeError
+    __getitem__ = __getattr__
+
+    def has_config(self, name):
+        return (name in self.config)
+
+    @staticmethod
+    def timestamp(post):
+        return time.mktime(post.date.timetuple())
+
+
+# Jinja2 filters
+def rfc3339(date):
+    tz = date.strftime('%Z') or 'Z'
+    return date.isoformat() + tz
+
+def human_readable_date(date):
+    fmt = "%B %e, %Y"
+    if type(date) is datetime.datetime:
+        fmt += " at %H:%M"
+    return date.strftime(fmt)
+
+def filter_month(posts, year, month):
+    return filter(lambda p: (p.date.year == year) and (p.date.month == month), posts)
+
+def filter_tag(posts, tag):
+    return filter(lambda p: (tag in p.tags), posts)
+
+if __name__ == '__main__':
+    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'filter_month': filter_month, 'filter_tag': filter_tag})
+    g.run()
