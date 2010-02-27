@@ -29,8 +29,11 @@ Installation
 
 1. Install Python (version 2.6, Golbarg is *not* compatible with Python 3 yet)
 2. Install the dependencies
-3. Create a directory where you will put all your files
-3. Create your configuration file and templates; you may want to look at [mine](http://github.com/Schnouki/schnouki.net) for examples
-4. Write your posts in the content/posts directory, using the Markdown syntax, with a YAML header for metadata (again, see my blog for examples)
-5. Run `golbarg` to generate the full site
-6. Upload it somewhere and enjoy your blog!
+3. Install Golbarg:
+    * Using Python tools: `easy_install Golbarg` or `pip Golbarg`
+    * Using tools from your distribution (`pacman`, `aptitude`, `emerge`...) if someone packaged Golbarg for it
+4. Create a directory where you will put all your files
+5. Create your configuration file and templates; you may want to look at [mine](http://github.com/Schnouki/schnouki.net) for examples
+6. Write your posts in the content/posts directory, using the Markdown syntax, with a YAML header for metadata (again, see my blog for examples)
+7. Run `golbarg` to generate the full site
+8. Upload it somewhere and enjoy your blog!
