@@ -28,6 +28,7 @@ import re
 import shutil
 import sys
 import time
+import unicodedata
 
 import jinja2
 import markdown
@@ -257,6 +258,19 @@ class Post:
         self.config = yaml.load(post_header)
         self.content = markdown.markdown(post_content)
 
+        # Check for required headers
+        for h in ["title", "date"]:
+            if h not in self.config:
+                print "! missing header in %s: %s" % (path, h)
+                sys.exit(1)
+
+        # Optional headers
+        if 'tags' not in self.config:
+            self.config['tags'] = list()
+
+        if 'slug' not in self.config:
+            self.config['slug'] = sluggify(self.config['title'])
+
         # Add some attributes
         self.relative_url = "/%04d/%02d/%02d/%s/" % (self.date.year, self.date.month, self.date.day, self.slug)
         self.file_path = os.path.join(SITE_DIR, "%04d" % self.date.year, "%02d" % self.date.month, "%02d" % self.date.day, self.slug, "index.html")
@@ -298,6 +312,25 @@ def filter_month(posts, year, month):
 
 def filter_tag(posts, tag):
     return filter(lambda p: (tag in p.tags), posts)
+
+
+# Convert post title to slug
+# Code to remove accents from http://bit.ly/aIvvHB
+def sluggify(title):
+    # Remove accents
+    s = ''.join((c for c in unicodedata.normalize('NFD', unicode(title)) if unicodedata.category(c) != 'Mn'))
+
+    # Lower case
+    s = s.lower()
+
+    # Convert spaces, etc. to -
+    s = re.sub(r'[^a-zA-Z0-9]+', '-', s)
+
+    # Remove multiple dashes
+    s = re.sub(r'--+', '-', s)
+
+    return s
+
 
 if __name__ == '__main__':
     g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'filter_month': filter_month, 'filter_tag': filter_tag})
