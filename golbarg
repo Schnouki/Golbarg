@@ -258,8 +258,8 @@ class Post:
         self.content = markdown.markdown(post_content)
 
         # Add some attributes
-        self.relative_url = "/%04d/%02d/%02d/%s" % (self.date.year, self.date.month, self.date.day, self.url)
-        self.file_path = os.path.join(SITE_DIR, "%04d" % self.date.year, "%02d" % self.date.month, "%02d" % self.date.day, self.url, "index.html")
+        self.relative_url = "/%04d/%02d/%02d/%s/" % (self.date.year, self.date.month, self.date.day, self.slug)
+        self.file_path = os.path.join(SITE_DIR, "%04d" % self.date.year, "%02d" % self.date.month, "%02d" % self.date.day, self.slug, "index.html")
 
     def __getattr__(self, name):
         try:
