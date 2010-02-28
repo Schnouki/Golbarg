@@ -14,7 +14,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 CONTENT_DIR   = "content"
-POSTS_DIR     = "content/posts"
+POSTS_DIR     = "posts"
 TEMPLATES_DIR = "templates"
 STATIC_DIR    = "static"
 SITE_DIR      = "site"
