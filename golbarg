@@ -259,13 +259,19 @@ class Post:
         self.content = markdown.markdown(post_content)
 
         # Check for required headers
+        all_headers_ok = True
         for h in ["title", "date"]:
             if h not in self.config:
                 print "! missing header in %s: %s" % (path, h)
-                sys.exit(1)
+                all_headers_ok = False
+            if self.config[h] is None:
+                print "! empty header in %s: %s" % (path, h) 
+                all_headers_ok = False
+        if not all_headers_ok:
+            sys.exit(1)
 
         # Optional headers
-        if 'tags' not in self.config:
+        if 'tags' not in self.config or type(self.config['tags']) is not list:
             self.config['tags'] = list()
 
         if 'slug' not in self.config:
