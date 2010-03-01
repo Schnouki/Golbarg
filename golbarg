@@ -168,7 +168,8 @@ class Golbarg:
             ctx = {'absolute_url': self.site_config['url'] + fn}
 
             # Render template to file
-            tpl.stream(ctx).dump(os.path.join(SITE_DIR, fn))
+            with open(os.path.join(SITE_DIR, fn), 'w') as out:
+                out.write(tpl.render(ctx).encode('utf-8'))
             print "  " + fn
 
     def make_posts(self):
@@ -191,7 +192,8 @@ class Golbarg:
             post_dir = os.path.split(post.file_path)[0]
             if not os.path.isdir(post_dir):
                 os.makedirs(post_dir)
-            tpl.stream(ctx).dump(post.file_path)
+            with open(post.file_path, 'w') as out:
+                out.write(tpl.render(ctx).encode('utf-8'))
             print "  %s - %s (%s)" % (post.date.strftime("%Y-%m-%d"), post.title, post.source_path)
     
     def make_archive(self):
@@ -211,7 +213,8 @@ class Golbarg:
                 os.makedirs(year_dir)
             
             ctx['year'] = year
-            year_tpl.stream(ctx).dump(os.path.join(year_dir, "index.html"))
+            with open(os.path.join(year_dir, "index.html"), 'w') as out:
+                out.write(year_tpl.render(ctx).encode('utf-8'))
             print "  %04d" % year
 
             for month in self.archive[year].iterkeys():
@@ -220,7 +223,8 @@ class Golbarg:
                     os.makedirs(month_dir)
 
                 ctx['month'] = month
-                month_tpl.stream(ctx).dump(os.path.join(month_dir, "index.html"))
+                with open(os.path.join(month_dir, "index.html"), 'w') as out:
+                    out.write(month_tpl.render(ctx).encode('utf-8'))
                 print "    %04d/%02d" % (year, month)
 
 
@@ -239,7 +243,8 @@ class Golbarg:
                 os.makedirs(tag_dir)
 
             ctx['tag'] = tag
-            tpl.stream(ctx).dump(os.path.join(tag_dir, "index.html"))
+            with open(os.path.join(tag_dir, "index.html"), 'w') as out:
+                out.write(tpl.render(ctx).encode('utf-8'))
             print "  %s" % tag
 
 
@@ -248,7 +253,7 @@ class Post:
         self.source_path = path
         
         with open(self.source_path) as post_file:
-            post_data = post_file.read()
+            post_data = post_file.read().decode("utf-8")
 
         # Separate header (yaml) and content (markdown)
         (post_header, post_content,) = re.split(POST_HEADER_SEP_RE, post_data, 1)
