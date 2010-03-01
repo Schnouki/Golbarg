@@ -177,7 +177,9 @@ class Golbarg:
         
         print "Generating posts..."
 
-        for post in self.posts:
+        for n in range(len(self.posts)):
+            post = self.posts[n]
+
             # Template to load?
             if post.has_config("template"):
                 tpl_name = post.template
@@ -187,6 +189,10 @@ class Golbarg:
 
             # Prepare template context
             ctx = {'post': post}
+            if n > 0:
+                ctx['prev_post'] = self.posts[n-1]
+            if n < len(self.posts)-1:
+                ctx['next_post'] = self.posts[n+1]
 
             # Render template to file
             post_dir = os.path.split(post.file_path)[0]
