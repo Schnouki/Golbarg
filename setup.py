@@ -7,6 +7,7 @@ import os.path
 setup(name='Golbarg',
       version='0.1',
       description='A static blog generator',
+      long_description=open('README.rst').read(),
       author='Thomas Jost',
       author_email='thomas.jost@gmail.com',
       url='http://github.com/Schnouki/Golbarg',
