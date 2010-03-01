@@ -6,26 +6,50 @@
 ;; (require 'golbarg)
 
 (require 'markdown-mode)
+(require 'org)
 (require 'yaml-mode)
 
-(defvar golbarg-posts-dir nil
-  "Golbarg posts directory.")
+(defgroup golbarg nil
+  "Major mode for editing Golbarg blog posts."
+  :prefix "golbarg-"
+  :group 'wp)
 
-(defvar golbarg-drafts-dir nil
-  "Golbarg drafts directory.")
+(defcustom golbarg-mode-hook nil
+  "Hook run by `golbarg-mode'."
+  :group 'golbarg
+  :type 'hook)
 
-(defvar golbarg-post-ext ""
-  "Golbarg posts files extension.")
+(defcustom golbarg-posts-dir "~/golbarg/posts"
+  "Golbarg posts directory."
+  :group 'golbarg
+  :type 'string)
 
-(defvar golbarg-post-template "title: %s\ndate: %s\ntags: []\n---\n\n"
-  "Template for Golbarg posts.")
+(defcustom golbarg-drafts-dir "~/golbarg/drafts"
+  "Golbarg drafts directory."
+  :group 'golbarg
+  :type 'string)
+
+(defcustom golbarg-post-ext ""
+  "Golbarg posts files extension."
+  :group 'golbarg
+  :type 'string)
+
+(defcustom golbarg-post-template "title: %s\ndate: %s\ntags: []\n---\n\n"
+  "Template for Golbarg posts."
+  :group 'golbarg
+  :type 'string)
 
 (defvar golbarg-header-face 'golbarg-header-face
   "Face for Golbarg posts headers.")
 
 (defface golbarg-header-face
   '((t (:background "gray85")))
-  "Face for Golbarg posts headers.")
+  "Face for Golbarg posts headers."
+  :group 'golbarg)
+
+(defvar golbarg-header-overlay nil
+  "Overlay used to change the face of the post header.")
+(make-variable-buffer-local 'golbarg-header-overlay)
 
 (defun golbarg-slug (title)
   "Turn a post title into a slug."
@@ -48,9 +72,8 @@
 (define-derived-mode golbarg-mode markdown-mode "Golbarg"
   "Major mode for Golbarg blog posts."
   (set (make-local-variable 'font-lock-fontify-region-function) 'golbarg-fontify-region)
-  (set (make-local-variable 'golbarg-overlay) (make-overlay (point-min) (golbarg-header-end)))
-  (overlay-put golbarg-overlay 'face 'golbarg-header-face)
-)
+  (setq golbarg-header-overlay (make-overlay (point-min) (golbarg-header-end)))
+  (overlay-put golbarg-header-overlay 'face 'golbarg-header-face))
 
 (defun golbarg-header-end ()
   "Get the point of the end of a Golbarg post header."
@@ -62,8 +85,8 @@
   "Fontify a region, using YAML font-lock parameters in the header."
   (let ((hdr-end (golbarg-header-end)))
     ;; Update header overlay
-    (if (not (= hdr-end (overlay-end golbarg-overlay)))
-	(move-overlay golbarg-overlay (point-min) hdr-end))
+    (if (not (= hdr-end (overlay-end golbarg-header-overlay)))
+	(move-overlay golbarg-header-overlay (point-min) hdr-end))
     ;; Check how to fontify the region
     (cond ((> beg hdr-end) ;; Region is after the header
 	   (font-lock-default-fontify-region beg end loudly))
