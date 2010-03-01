@@ -324,6 +324,9 @@ def human_readable_date(date):
         fmt += " at %H:%M"
     return date.strftime(fmt)
 
+def short_date(date):
+    return date.strftime("%b. %e")
+
 def filter_month(posts, year, month):
     return filter(lambda p: (p.date.year == year) and (p.date.month == month), posts)
 
@@ -350,5 +353,5 @@ def sluggify(title):
 
 
 if __name__ == '__main__':
-    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'filter_month': filter_month, 'filter_tag': filter_tag})
+    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'short_date': short_date, 'filter_month': filter_month, 'filter_tag': filter_tag})
     g.run()
