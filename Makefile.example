@@ -10,5 +10,5 @@ all: .golbarg-build .golbarg-upload
 	@touch .golbarg-build
 
 .golbarg-upload: .golbarg-build $(STATIC)
-	@rsync -vak --delete -e ssh site/ my-site:/path/to/htdocs
+	@rsync -vack --delete -e ssh site/ my-site:/path/to/htdocs
 	@touch .golbarg-upload
