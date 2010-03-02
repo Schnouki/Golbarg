@@ -265,9 +265,9 @@ class Post:
         (post_header, post_content,) = re.split(POST_HEADER_SEP_RE, post_data, 1)
 
         # Parse header and content
-        # TODO: use post header to add markdown filters
+        # TODO: use post header to add markdown extensions
         self.config = yaml.load(post_header)
-        self.content = markdown.markdown(post_content)
+        self.content = markdown.markdown(post_content, ['extra'])
 
         # Check for required headers
         all_headers_ok = True
