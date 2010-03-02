@@ -47,6 +47,14 @@
   "Face for Golbarg posts headers."
   :group 'golbarg)
 
+
+(defvar golbarg-mode-map
+  (let ((golbarg-mode-map (make-keymap)))
+    (define-key golbarg-mode-map "\C-c\C-cp" 'golbarg-preview)
+    golbarg-mode-map)
+  "Keymap for Golbarg major mode.")
+
+
 (defvar golbarg-header-overlay nil
   "Overlay used to change the face of the post header.")
 (make-variable-buffer-local 'golbarg-header-overlay)
@@ -101,5 +109,16 @@
 	(font-lock-keywords yaml-font-lock-keywords))
     (font-lock-default-fontify-region beg end loudly)))
 
+(defun golbarg-preview ()
+  "Run markdown on the current buffer and preview the output in a
+browser, omitting the post header."
+  (interactive)
+  (if (and (boundp 'transient-mark-mode) transient-mark-mode mark-active)
+      (markdown-preview)
+    (save-excursion
+      ;; Select the content
+      (set-mark (golbarg-header-end)); t t)
+      (goto-char (point-max))
+      (markdown-preview))))
 
 (provide 'golbarg)
