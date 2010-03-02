@@ -9,6 +9,8 @@
 (require 'org)
 (require 'yaml-mode)
 
+;;; Customizable variables ====================================================
+
 (defgroup golbarg nil
   "Major mode for editing Golbarg blog posts."
   :prefix "golbarg-"
@@ -48,6 +50,8 @@
   :group 'golbarg)
 
 
+;;; Keymap ====================================================================
+
 (defvar golbarg-mode-map
   (let ((golbarg-mode-map (make-keymap)))
     (define-key golbarg-mode-map "\C-c\C-cp" 'golbarg-preview)
@@ -55,9 +59,14 @@
   "Keymap for Golbarg major mode.")
 
 
+;;; Buffer-local variables ====================================================
+
 (defvar golbarg-header-overlay nil
   "Overlay used to change the face of the post header.")
 (make-variable-buffer-local 'golbarg-header-overlay)
+
+
+;;; Actual code ===============================================================
 
 (defun golbarg-slug (title)
   "Turn a post title into a slug."
