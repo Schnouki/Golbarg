@@ -99,7 +99,6 @@
 (defun golbarg-fontify-region-as-yaml (beg end loudly)
   (let ((font-lock-syntactic-keywords yaml-font-lock-syntactic-keywords)
 	(font-lock-keywords yaml-font-lock-keywords))
-    (message (concat "From " (int-to-string beg) " to " (int-to-string end)))
     (font-lock-default-fontify-region beg end loudly)))
 
 
