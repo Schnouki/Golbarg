@@ -51,3 +51,21 @@ Installation
    with a YAML header for metadata (again, see my blog for examples)
 #. Run `golbarg` to generate the full site
 #. Upload it somewhere and enjoy your blog!
+
+
+`golbarg-mode` for Emacs
+========================
+
+If you use Emacs, you may want to use `golbarg-mode`. Simply add the directory
+where `golbarg.el` is located to your `load-path`, add `(require 'golbarg)` in
+your `.emacs`, and you are done. You can now use `M-x golbarg-mode` to switch a
+buffer to the Golbarg major mode, and use other commands such as
+`golbarg-new-draft`, `golbarg-publish-post`, and `golbarg-preview` (after
+customizing the `golbarg-drafts-dir` and `golbarg-posts-dir` variables).
+
+You can see a full configuration on my `emacs-config
+<http://github.com/Schnouki/emacs-config/blob/9aee67d153f63669af99626a14ac39e94eddeff7/init-30-modes.el#L60>`_
+repository.
+
+`golbarg-mode` requires `markdown-mode` and `yaml-mode` to work, so be sure to
+install these modes first.
