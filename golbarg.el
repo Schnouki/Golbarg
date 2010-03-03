@@ -150,12 +150,22 @@ changed."
   "Run markdown on the current buffer and preview the output in a
 browser, omitting the post header."
   (interactive)
-  (if (and (boundp 'transient-mark-mode) transient-mark-mode mark-active)
-      (markdown-preview)
-    (save-excursion
-      ;; Select the content
-      (set-mark (golbarg-header-end))
-      (goto-char (point-max))
-      (markdown-preview))))
+  (let* ((my-next-win (next-window))
+	 (my-next-buf (window-buffer my-next-win))
+	 output-win)
+    (if (and (boundp 'transient-mark-mode) transient-mark-mode mark-active)
+	(markdown-preview)
+      (save-excursion
+	;; Select the content
+	(set-mark (golbarg-header-end))
+	(goto-char (point-max))
+	(markdown-preview)))
+    ;; Don't show the markdown output buffer
+    (setq output-win (get-buffer-window "*markdown-output*" nil))
+    (if (eq my-next-win output-win)
+	;; The window already existed
+	(set-window-buffer my-next-win my-next-buf)
+      ;; The window was created for the output buffer
+      (delete-window output-win))))
 
 (provide 'golbarg)
