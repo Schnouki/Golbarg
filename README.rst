@@ -40,32 +40,33 @@ Installation
 
 1. Install Python (version 2.6, Golbarg is *not* compatible with Python 3 yet)
 #. Install the dependencies
-#. Install Golbarg: you can use Python tools (`easy_install Golbarg` or `pip
-   install Golbarg`) or, if you are a Linux user, the tools from your
-   distribution(`pacman`, `aptitude`, `emerge`...) if someone packaged Golbarg
-   for it
+#. Install Golbarg: you can use Python tools (``easy_install Golbarg`` or ``pip
+   install Golbarg``) or, if you are a Linux user, the tools from your
+   distribution(``pacman``, ``aptitude``, ``emerge``...) if someone packaged
+   Golbarg for it
 #. Create a directory where you will put all your files
 #. Create your configuration file and templates; you may want to look at 
    `mine <http://github.com/Schnouki/schnouki.net>`_ for examples
 #. Write your posts in the content/posts directory, using the Markdown syntax,
    with a YAML header for metadata (again, see my blog for examples)
-#. Run `golbarg` to generate the full site
+#. Run ``golbarg`` to generate the full site
 #. Upload it somewhere and enjoy your blog!
 
 
-`golbarg-mode` for Emacs
-========================
+``golbarg-mode`` for Emacs
+==========================
 
-If you use Emacs, you may want to use `golbarg-mode`. Simply add the directory
-where `golbarg.el` is located to your `load-path`, add `(require 'golbarg)` in
-your `.emacs`, and you are done. You can now use `M-x golbarg-mode` to switch a
-buffer to the Golbarg major mode, and use other commands such as
-`golbarg-new-draft`, `golbarg-publish-post`, and `golbarg-preview` (after
-customizing the `golbarg-drafts-dir` and `golbarg-posts-dir` variables).
+If you use Emacs, you may want to use ``golbarg-mode``. Simply add the directory
+where ``golbarg.el`` is located to your ``load-path``, add ``(require
+'golbarg)`` in your ``.emacs``, and you are done. You can now use ``M-x
+golbarg-mode`` to switch a buffer to the Golbarg major mode, and use other
+commands such as ``golbarg-new-draft``, ``golbarg-publish-post``, and
+``golbarg-preview`` (after customizing the ``golbarg-drafts-dir`` and
+``golbarg-posts-dir`` variables).
 
 You can see a full configuration on my `emacs-config
 <http://github.com/Schnouki/emacs-config/blob/9aee67d153f63669af99626a14ac39e94eddeff7/init-30-modes.el#L60>`_
 repository.
 
-`golbarg-mode` requires `markdown-mode` and `yaml-mode` to work, so be sure to
-install these modes first.
+``golbarg-mode`` requires ``markdown-mode`` and ``yaml-mode`` to work, so be
+sure to install these modes first.
