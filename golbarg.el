@@ -55,6 +55,7 @@
 (defvar golbarg-mode-map
   (let ((golbarg-mode-map (make-keymap)))
     (define-key golbarg-mode-map "\C-c\C-cp" 'golbarg-preview)
+    (define-key golbarg-mode-map "\C-c\C-c\C-m" 'golbarg-publish-post)
     golbarg-mode-map)
   "Keymap for Golbarg major mode.")
 
@@ -85,6 +86,33 @@
     (insert (format golbarg-post-template title date))
     (switch-to-buffer buf)
     (golbarg-mode)))
+
+(defun golbarg-pusblish-post ()
+  "Publish a Golbarg post draft. This moves the draft to the
+posts directory, renaming the file to if the date or title were
+changed."
+  (interactive)
+  ;; Check if this the buffer is in golbarg-mode
+  (if (eq major-mode 'golbarg-mode)
+      (save-excursion
+	(let (date title new-fn)
+	  ;; Look for the date
+	  (goto-char (point-min))
+	  (if (not (re-search-forward "^date:[ \t]*\\(.+\\)$" nil t))
+	      (error "Post date not found"))
+	  (setq date (match-string 1))
+	  ;; Look for the title
+	  (goto-char (point-min))
+	  (if (not (re-search-forward "^title:[ \t]*\\(.+\\)$" nil t))
+	      (error "Post title not found"))
+	  (setq title (match-string 1))
+	  ;; New filename
+	  (setq new-fn (expand-file-name (concat date "-" (golbarg-slug title) golbarg-post-ext) golbarg-posts-dir))
+	  ;; Rename file and buffer
+	  (rename-file (buffer-file-name) new-fn)
+	  (set-visited-file-name new-fn nil t)
+	  (message (concat "This post has been saved as " new-fn))))
+    (error "This is not a Golbarg post")))
 
 (define-derived-mode golbarg-mode markdown-mode "Golbarg"
   "Major mode for Golbarg blog posts."
@@ -126,7 +154,7 @@ browser, omitting the post header."
       (markdown-preview)
     (save-excursion
       ;; Select the content
-      (set-mark (golbarg-header-end)); t t)
+      (set-mark (golbarg-header-end))
       (goto-char (point-max))
       (markdown-preview))))
 
