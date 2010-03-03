@@ -87,7 +87,7 @@
     (switch-to-buffer buf)
     (golbarg-mode)))
 
-(defun golbarg-pusblish-post ()
+(defun golbarg-publish-post ()
   "Publish a Golbarg post draft. This moves the draft to the
 posts directory, renaming the file to if the date or title were
 changed."
