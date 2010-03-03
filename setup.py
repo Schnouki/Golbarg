@@ -5,7 +5,7 @@ from setuptools import setup
 import os.path
 
 setup(name='Golbarg',
-      version='0.1',
+      version='0.2',
       description='A static blog generator',
       long_description=open('README.rst').read(),
       author='Thomas Jost',
