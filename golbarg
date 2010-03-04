@@ -315,8 +315,11 @@ class Post:
 
 # Jinja2 filters
 def rfc3339(date):
-    tz = date.strftime('%Z') or 'Z'
-    return date.isoformat() + tz
+    if type(date) is datetime.date:
+        return date.isoformat()
+    else:
+        tz = date.strftime('%Z') or 'Z'
+        return date.isoformat() + tz
 
 def human_readable_date(date):
     fmt = "%B %e, %Y"
