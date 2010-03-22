@@ -29,6 +29,7 @@ import shutil
 import sys
 import time
 import unicodedata
+import urlparse
 
 import jinja2
 import markdown
@@ -112,7 +113,10 @@ class Golbarg:
 
         # Post absolute URL
         for post in self.posts:
-            post.absolute_url = self.site_config['url'] + post.relative_url
+            post.absolute_url = urlparse.urljoin(
+                self.site_config['url'],
+                post.relative_url
+            )
 
         # Tags
         self.tags = {}
@@ -165,7 +169,9 @@ class Golbarg:
             tpl = self.env.from_string(content)
 
             # Prepare template context
-            ctx = {'absolute_url': self.site_config['url'] + fn}
+            ctx = {
+                'absolute_url': urlparse.urljoin(self.site_config['url'], fn)
+            }
 
             # Render template to file
             with open(os.path.join(SITE_DIR, fn), 'w') as out:
