@@ -111,12 +111,14 @@ class Golbarg:
         # Copyright period
         self.site_config['copyright_period'] = "%04d - %04d" % (self.posts[0].date.year, self.posts[-1].date.year)
 
-        # Post absolute URL
+        # Post absolute URL and language
         for post in self.posts:
             post.absolute_url = urlparse.urljoin(
                 self.site_config['url'],
                 post.relative_url
             )
+            if not post.has_config("language"):
+                post.language = self.site_config['language']
 
         # Tags
         self.tags = {}
