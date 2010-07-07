@@ -349,6 +349,18 @@ def filter_month(posts, year, month):
 def filter_tag(posts, tag):
     return filter(lambda p: (tag in p.tags), posts)
 
+def shorten(value, length):
+    ender = " (...)"
+    if length <= len(ender):
+        length += len(ender)
+    if len(value) <= length:
+        return value
+
+    # Cut the string at its last space
+    s = value[:length-len(ender)]
+    s = s.rsplit(None, 1)[0]
+    s += ender
+    return s
 
 # Convert post title to slug
 # Code to remove accents from http://bit.ly/aIvvHB
@@ -369,5 +381,5 @@ def sluggify(title):
 
 
 if __name__ == '__main__':
-    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'short_date': short_date, 'filter_month': filter_month, 'filter_tag': filter_tag})
+    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'short_date': short_date, 'filter_month': filter_month, 'filter_tag': filter_tag, 'shorten': shorten})
     g.run()
