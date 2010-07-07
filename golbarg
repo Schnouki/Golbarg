@@ -314,7 +314,6 @@ class Post:
             else:
                 return getattr(self.config[s[0]], s[1])
         except KeyError:
-            print name
             raise AttributeError
     __getitem__ = __getattr__
 
