@@ -248,7 +248,13 @@ class Golbarg:
         print "Generating tag pages..."
 
         # Template and context
-        tpl = self.env.get_template(self.site_config['tag_template'])
+        tpl_names = self.site_config['tag_template']
+        if type(tpl_names) is str:
+            tpls = {"index.html": self.env.get_template(tpl_names)}
+        else:
+            tpls = {}
+            for file_name, tpl in tpl_names.iteritems():
+                tpls[file_name] = self.env.get_template(tpl)
         ctx = {}
 
         for tag in self.tags:
@@ -257,8 +263,9 @@ class Golbarg:
                 os.makedirs(tag_dir)
 
             ctx['tag'] = tag
-            with open(os.path.join(tag_dir, "index.html"), 'w') as out:
-                out.write(tpl.render(ctx).encode('utf-8'))
+            for file_name, tpl in tpls.iteritems():
+                with open(os.path.join(tag_dir, file_name), 'w') as out:
+                    out.write(tpl.render(ctx).encode('utf-8'))
             print "  %s" % tag
 
 
