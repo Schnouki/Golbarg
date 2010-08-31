@@ -45,7 +45,11 @@ class Golbarg:
             self.site_config = yaml.load(cf.read())
 
         self.posts = list()
-        
+
+        # Hidden tags
+        if not 'hidden_tags' in self.site_config:
+            self.site_config['hidden_tags'] = []
+      
         self.env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATES_DIR))
         self.env.globals['site'] = self.site_config
         self.env.globals['posts'] = self.posts
@@ -120,24 +124,37 @@ class Golbarg:
             if not post.has_config("language"):
                 post.language = self.site_config['language']
 
-        # Tags
+        # Tags and hidden tags
         self.tags = {}
-        self.tag_min = sys.maxint
-        self.tag_max = 0
+        self.hidden_tags = {}
+        
         for post in self.posts:
             for tag in post.tags:
-                if not tag in self.tags:
-                    self.tags[tag] = 0
-                self.tags[tag] += 1
-        for tag in self.tags:
-            n = self.tags[tag]
-            if self.tag_min > n:
-                self.tag_min = n
-            if n > self.tag_max:
-                self.tag_max = n
-        self.env.globals['tags'] = self.tags
-        self.env.globals['tag_min'] = self.tag_min
-        self.env.globals['tag_max'] = self.tag_max
+                if tag in self.site_config['hidden_tags']:
+                    post.remove_tag(tag)
+                    dst = self.hidden_tags
+                else:
+                    dst = self.tags
+                    
+                if tag not in dst:
+                    dst[tag] = [post]
+                else:
+                    dst[tag].append(post)
+        
+        tag_min = sys.maxint
+        tag_max = 0
+        env_tags = {}
+        for tag in self.tags.iterkeys():
+            n = len(self.tags[tag])
+            env_tags[tag] = n
+            if tag_min > n:
+                tag_min = n
+            if n > tag_max:
+                tag_max = n
+                
+        self.env.globals['tags'] = env_tags
+        self.env.globals['tag_min'] = tag_min
+        self.env.globals['tag_max'] = tag_max
 
         # Archive
         self.archive = {}
@@ -257,16 +274,32 @@ class Golbarg:
                 tpls[file_name] = self.env.get_template(tpl)
         ctx = {}
 
+        # First normal tags
         for tag in self.tags:
             tag_dir = os.path.join(SITE_DIR, "tag", tag)
             if not os.path.isdir(tag_dir):
                 os.makedirs(tag_dir)
 
             ctx['tag'] = tag
+            ctx['posts'] = self.tags[tag]
             for file_name, tpl in tpls.iteritems():
                 with open(os.path.join(tag_dir, file_name), 'w') as out:
                     out.write(tpl.render(ctx).encode('utf-8'))
             print "  %s" % tag
+
+        # Then hidden tags
+        for tag in self.hidden_tags:
+            tag_dir = os.path.join(SITE_DIR, "tag", tag)
+            if not os.path.isdir(tag_dir):
+                os.makedirs(tag_dir)
+
+            ctx['tag'] = tag
+            ctx['posts'] = self.hidden_tags[tag]
+            for file_name, tpl in tpls.iteritems():
+                with open(os.path.join(tag_dir, file_name), 'w') as out:
+                    out.write(tpl.render(ctx).encode('utf-8'))
+            print "  %s (hidden)" % tag
+            
 
 
 class Post:
@@ -329,6 +362,12 @@ class Post:
     def has_config(self, name):
         return (name in self.config)
 
+    def remove_tag(self, tag):
+        try:
+            self.config['tags'].remove(tag)
+        except ValueError:
+            pass
+
     @staticmethod
     def timestamp(post):
         return time.mktime(post.date.timetuple())
@@ -353,9 +392,6 @@ def short_date(date):
 
 def filter_month(posts, year, month):
     return filter(lambda p: (p.date.year == year) and (p.date.month == month), posts)
-
-def filter_tag(posts, tag):
-    return filter(lambda p: (tag in p.tags), posts)
 
 def shorten(value, length):
     ender = " (...)"
@@ -389,5 +425,5 @@ def sluggify(title):
 
 
 if __name__ == '__main__':
-    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'short_date': short_date, 'filter_month': filter_month, 'filter_tag': filter_tag, 'shorten': shorten})
+    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'short_date': short_date, 'filter_month': filter_month, 'shorten': shorten})
     g.run()
