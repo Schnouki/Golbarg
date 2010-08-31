@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
@@ -23,7 +23,7 @@ setup(name='Golbarg',
           'Intended Audience :: End Users/Desktop',
           'License :: OSI Approved :: GNU General Public License (GPL)',
           'Operating System :: OS Independent',
-          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 3',
           'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: News/Diary',
           'Topic :: Internet :: WWW/HTTP :: Site Management',
           ]

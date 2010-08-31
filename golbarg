@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # This program is free software: you can redistribute it and/or modify it under
@@ -29,7 +29,7 @@ import shutil
 import sys
 import time
 import unicodedata
-import urlparse
+import urllib.parse
 
 import jinja2
 import markdown
@@ -55,7 +55,7 @@ class Golbarg:
         self.env.globals['posts'] = self.posts
 
         if jinja_filters is not None:
-            for filter_name in jinja_filters.iterkeys():
+            for filter_name in jinja_filters.keys():
                 self.env.filters[filter_name] = jinja_filters[filter_name]
 
         # Months
@@ -86,23 +86,23 @@ class Golbarg:
         self.make_tags()
 
         # ...and symlink static files
-        print "Symlinking static files..."
+        print("Symlinking static files...")
         if not os.path.islink(os.path.join(SITE_DIR, STATIC_DIR)):
             os.symlink(os.path.abspath(STATIC_DIR), os.path.join(SITE_DIR, STATIC_DIR))
 
-        print "All done! =]"
+        print("All done! =]")
 
     def parse_posts(self):
         """Parse all the files in the posts directory, extracting metadata and generating HTML files"""
-        print "Parsing posts..."
+        print("Parsing posts...")
         
-        post_files = filter(os.path.isfile, [os.path.join(POSTS_DIR, post) for post in os.listdir(POSTS_DIR)])
+        post_files = list(filter(os.path.isfile, [os.path.join(POSTS_DIR, post) for post in os.listdir(POSTS_DIR)]))
         post_files.sort()
 
         for post_path in post_files:
             p = Post(post_path)
             self.posts.append(p)
-        print "Parsed %d posts" % len(post_files)
+        print(("Parsed %d posts" % len(post_files)))
 
     def update_metadata(self):
         """Add some useful informations to the metadata available, both for site and posts"""
@@ -117,7 +117,7 @@ class Golbarg:
 
         # Post absolute URL and language
         for post in self.posts:
-            post.absolute_url = urlparse.urljoin(
+            post.absolute_url = urllib.parse.urljoin(
                 self.site_config['url'],
                 post.relative_url
             )
@@ -141,10 +141,10 @@ class Golbarg:
                 else:
                     dst[tag].append(post)
         
-        tag_min = sys.maxint
+        tag_min = sys.maxsize
         tag_max = 0
         env_tags = {}
-        for tag in self.tags.iterkeys():
+        for tag in self.tags.keys():
             n = len(self.tags[tag])
             env_tags[tag] = n
             if tag_min > n:
@@ -171,12 +171,12 @@ class Golbarg:
         self.env.globals['archive'] = self.archive
         self.env.globals['month_names'] = self.month_names
 
-        print "Latest update: " + str(self.site_config['update_date'])
+        print(("Latest update: " + str(self.site_config['update_date'])))
 
     def make_site_root(self):
         """Generate all the files in the root content directory (index, feed...)"""
 
-        print "Generating files at site root..."
+        print("Generating files at site root...")
         
         files = [f for f in os.listdir(CONTENT_DIR) if os.path.isfile(os.path.join(CONTENT_DIR, f))]
         files.sort()
@@ -189,18 +189,18 @@ class Golbarg:
 
             # Prepare template context
             ctx = {
-                'absolute_url': urlparse.urljoin(self.site_config['url'], fn)
+                'absolute_url': urllib.parse.urljoin(self.site_config['url'], fn)
             }
 
             # Render template to file
             with open(os.path.join(SITE_DIR, fn), 'w') as out:
-                out.write(tpl.render(ctx).encode('utf-8'))
-            print "  " + fn
+                out.write(tpl.render(ctx))
+            print(("  " + fn))
 
     def make_posts(self):
         """Generate all posts"""
         
-        print "Generating posts..."
+        print("Generating posts...")
 
         for n in range(len(self.posts)):
             post = self.posts[n]
@@ -224,13 +224,13 @@ class Golbarg:
             if not os.path.isdir(post_dir):
                 os.makedirs(post_dir)
             with open(post.file_path, 'w') as out:
-                out.write(tpl.render(ctx).encode('utf-8'))
-            print "  %s - %s (%s)" % (post.date.strftime("%Y-%m-%d"), post.title, post.source_path)
+                out.write(tpl.render(ctx))
+            print(("  %s - %s (%s)" % (post.date.strftime("%Y-%m-%d"), post.title, post.source_path)))
     
     def make_archive(self):
         """Generate archive"""
 
-        print "Generating archive..."
+        print("Generating archive...")
 
         year_tpl = self.env.get_template(self.site_config['archive_year_template'])
         month_tpl = self.env.get_template(self.site_config['archive_month_template'])
@@ -238,31 +238,31 @@ class Golbarg:
         # Context
         ctx = {}
         
-        for year in self.archive.iterkeys():
+        for year in self.archive.keys():
             year_dir = os.path.join(SITE_DIR, "archive", "%04d" % year)
             if not os.path.isdir(year_dir):
                 os.makedirs(year_dir)
             
             ctx['year'] = year
             with open(os.path.join(year_dir, "index.html"), 'w') as out:
-                out.write(year_tpl.render(ctx).encode('utf-8'))
-            print "  %04d" % year
+                out.write(year_tpl.render(ctx))
+            print(("  %04d" % year))
 
-            for month in self.archive[year].iterkeys():
+            for month in self.archive[year].keys():
                 month_dir = os.path.join(year_dir, "%02d" % month)
                 if not os.path.isdir(month_dir):
                     os.makedirs(month_dir)
 
                 ctx['month'] = month
                 with open(os.path.join(month_dir, "index.html"), 'w') as out:
-                    out.write(month_tpl.render(ctx).encode('utf-8'))
-                print "    %04d/%02d" % (year, month)
+                    out.write(month_tpl.render(ctx))
+                print(("    %04d/%02d" % (year, month)))
 
 
     def make_tags(self):
         """Generate tag pages"""
 
-        print "Generating tag pages..."
+        print("Generating tag pages...")
 
         # Template and context
         tpl_names = self.site_config['tag_template']
@@ -270,7 +270,7 @@ class Golbarg:
             tpls = {"index.html": self.env.get_template(tpl_names)}
         else:
             tpls = {}
-            for file_name, tpl in tpl_names.iteritems():
+            for file_name, tpl in tpl_names.items():
                 tpls[file_name] = self.env.get_template(tpl)
         ctx = {}
 
@@ -282,10 +282,10 @@ class Golbarg:
 
             ctx['tag'] = tag
             ctx['posts'] = self.tags[tag]
-            for file_name, tpl in tpls.iteritems():
+            for file_name, tpl in tpls.items():
                 with open(os.path.join(tag_dir, file_name), 'w') as out:
-                    out.write(tpl.render(ctx).encode('utf-8'))
-            print "  %s" % tag
+                    out.write(tpl.render(ctx))
+            print(("  %s" % tag))
 
         # Then hidden tags
         for tag in self.hidden_tags:
@@ -295,10 +295,10 @@ class Golbarg:
 
             ctx['tag'] = tag
             ctx['posts'] = self.hidden_tags[tag]
-            for file_name, tpl in tpls.iteritems():
+            for file_name, tpl in tpls.items():
                 with open(os.path.join(tag_dir, file_name), 'w') as out:
-                    out.write(tpl.render(ctx).encode('utf-8'))
-            print "  %s (hidden)" % tag
+                    out.write(tpl.render(ctx))
+            print(("  %s (hidden)" % tag))
             
 
 
@@ -307,7 +307,7 @@ class Post:
         self.source_path = path
         
         with open(self.source_path) as post_file:
-            post_data = post_file.read().decode("utf-8")
+            post_data = post_file.read()
 
         # Separate header (yaml) and content (markdown)
         (post_header, post_content,) = re.split(POST_HEADER_SEP_RE, post_data, 1)
@@ -328,10 +328,10 @@ class Post:
         all_headers_ok = True
         for h in ["title", "date"]:
             if h not in self.config:
-                print "! missing header in %s: %s" % (path, h)
+                print(("! missing header in %s: %s" % (path, h)))
                 all_headers_ok = False
             if self.config[h] is None:
-                print "! empty header in %s: %s" % (path, h) 
+                print(("! empty header in %s: %s" % (path, h)))
                 all_headers_ok = False
         if not all_headers_ok:
             sys.exit(1)
@@ -391,7 +391,7 @@ def short_date(date):
     return date.strftime("%b. %e")
 
 def filter_month(posts, year, month):
-    return filter(lambda p: (p.date.year == year) and (p.date.month == month), posts)
+    return [p for p in posts if (p.date.year == year) and (p.date.month == month)]
 
 def shorten(value, length):
     ender = " (...)"
@@ -410,7 +410,7 @@ def shorten(value, length):
 # Code to remove accents from http://bit.ly/aIvvHB
 def sluggify(title):
     # Remove accents
-    s = ''.join((c for c in unicodedata.normalize('NFD', unicode(title)) if unicodedata.category(c) != 'Mn'))
+    s = ''.join((c for c in unicodedata.normalize('NFD', str(title)) if unicodedata.category(c) != 'Mn'))
 
     # Lower case
     s = s.lower()
