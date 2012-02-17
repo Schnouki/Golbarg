@@ -38,8 +38,20 @@ import yaml
 # Compile regexps
 POST_HEADER_SEP_RE = re.compile(POST_HEADER_SEP_RE, re.M)
 
+# Jinja2 filters management
+class JinjaFilters:
+    filters = []
+    @staticmethod
+    def add(func):
+        JinjaFilters.filters.append(func)
+        return func
+    @staticmethod
+    def to_env(env):
+        for func in JinjaFilters.filters:
+            env[func.__name__] = func
+
 class Golbarg:
-    def __init__(self, jinja_filters=None):
+    def __init__(self):
         # Load configuration from the config.yaml file
         with open("config.yaml") as cf:
             self.site_config = yaml.load(cf.read())
@@ -54,9 +66,7 @@ class Golbarg:
         self.env.globals['site'] = self.site_config
         self.env.globals['posts'] = self.posts
 
-        if jinja_filters is not None:
-            for filter_name in jinja_filters.keys():
-                self.env.filters[filter_name] = jinja_filters[filter_name]
+        JinjaFilters.to_env(self.env.filters)
 
         # Months
         months = {}
@@ -374,6 +384,7 @@ class Post:
 
 
 # Jinja2 filters
+@JinjaFilters.add
 def rfc3339(date):
     if type(date) is datetime.date:
         return date.isoformat()
@@ -381,18 +392,22 @@ def rfc3339(date):
         tz = date.strftime('%Z') or 'Z'
         return date.isoformat() + tz
 
+@JinjaFilters.add
 def human_readable_date(date):
     fmt = "%B %e, %Y"
     if type(date) is datetime.datetime:
         fmt += " at %H:%M"
     return date.strftime(fmt)
 
+@JinjaFilters.add
 def short_date(date):
     return date.strftime("%b. %e")
 
+@JinjaFilters.add
 def filter_month(posts, year, month):
     return [p for p in posts if (p.date.year == year) and (p.date.month == month)]
 
+@JinjaFilters.add
 def shorten(value, length):
     ender = " (...)"
     if length <= len(ender):
@@ -425,5 +440,5 @@ def sluggify(title):
 
 
 if __name__ == '__main__':
-    g = Golbarg({'rfc3339': rfc3339, 'human_readable_date': human_readable_date, 'short_date': short_date, 'filter_month': filter_month, 'shorten': shorten})
+    g = Golbarg()
     g.run()
